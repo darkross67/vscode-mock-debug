@@ -78,23 +78,23 @@
       "editor/title/run": [
         {
           "command": "extension.mock-debug.runEditorContents",
-          "when": "resourceLangId == markdown",
+          "when": "resourceLangId == num1060",
           "group": "navigation@1"
         },
         {
           "command": "extension.mock-debug.debugEditorContents",
-          "when": "resourceLangId == markdown",
+          "when": "resourceLangId == num1060",
           "group": "navigation@2"
         }
       ],
       "commandPalette": [
         {
           "command": "extension.mock-debug.debugEditorContents",
-          "when": "resourceLangId == markdown"
+          "when": "resourceLangId == num1060"
         },
         {
           "command": "extension.mock-debug.runEditorContents",
-          "when": "resourceLangId == markdown"
+          "when": "resourceLangId == num1060"
         }
       ],
       "debug/variables/context": [
@@ -126,14 +126,14 @@
     ],
     "breakpoints": [
       {
-        "language": "markdown"
+        "language": "num1060"
       }
     ],
     "debuggers": [
       {
         "type": "mock",
         "languages": [
-          "markdown"
+          "num1060"
         ],
         "label": "Mock Debug",
         "program": "./out/debugAdapter.js",
@@ -224,7 +224,7 @@
         "configurationSnippets": [
           {
             "label": "Mock Debug: Launch",
-            "description": "A new configuration for 'debugging' a user selected markdown file.",
+            "description": "A new configuration for 'debugging' a user selected num1060 file.",
             "body": {
               "type": "mock",
               "request": "launch",

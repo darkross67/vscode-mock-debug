@@ -41,10 +41,9 @@ interface RuntimeDisassembledInstruction {
 	line?: number;
 }
 
-export type IRuntimeVariableType = number | boolean | string | RuntimeVariable[];
+export type IRuntimeVariableType = number ;
 
 export class RuntimeVariable {
-	private _memory?: Uint8Array;
 
 	public reference?: number;
 
@@ -52,30 +51,12 @@ export class RuntimeVariable {
 		return this._value;
 	}
 
-	public set value(value: IRuntimeVariableType) {
+	public set value(value: number) {
 		this._value = value;
-		this._memory = undefined;
 	}
 
-	public get memory() {
-		if (this._memory === undefined && typeof this._value === 'string') {
-			this._memory = new TextEncoder().encode(this._value);
-		}
-		return this._memory;
-	}
+	constructor(public readonly name: string, private _value: number) {}
 
-	constructor(public readonly name: string, private _value: IRuntimeVariableType) {}
-
-	public setMemory(data: Uint8Array, offset = 0) {
-		const memory = this.memory;
-		if (!memory) {
-			return;
-		}
-
-		memory.set(data, offset);
-		this._memory = memory;
-		this._value = new TextDecoder().decode(memory);
-	}
 }
 
 interface Word {
@@ -459,7 +440,7 @@ export class MockRuntime extends EventEmitter {
 
 	private getWords(l: number, line: string): Word[] {
 		// break line into words
-		const WORD_REGEXP = /[a-z]+/ig;
+		const WORD_REGEXP = /[A-Z]+[-+]?\d*\.?\d*/ig;
 		const words: Word[] = [];
 		let match: RegExpExecArray | null;
 		while (match = WORD_REGEXP.exec(line)) {
@@ -553,49 +534,33 @@ export class MockRuntime extends EventEmitter {
 		const line = this.getLine(ln);
 
 		// find variable accesses
-		let reg0 = /\$([a-z][a-z0-9]*)(=(false|true|[0-9]+(\.[0-9]+)?|\".*\"|\{.*\}))?/ig;
+		let reg0 = /^([LE][0-9]*)\s*=\s*([+-]?)(([0-9]+\.?[0-9]*)|([LE][0-9]*))/ig;
 		let matches0: RegExpExecArray | null;
 		while (matches0 = reg0.exec(line)) {
-			if (matches0.length === 5) {
+			if (matches0.length >= 5) {
 
 				let access: string | undefined;
 
-				const name = matches0[1];
-				const value = matches0[3];
+				const name : string = matches0[1];
+				const isNegativ : boolean = matches0[2] === '-' ? true: false;
+				const exp : string = matches0[3];
+				const value : string = matches0[4] ;
+				const variable : string = matches0[5];
 
-				let v = new RuntimeVariable(name, value);
+				let result : number = 0;
 
-				if (value && value.length > 0) {
-
-					if (value === 'true') {
-						v.value = true;
-					} else if (value === 'false') {
-						v.value = false;
-					} else if (value[0] === '"') {
-						v.value = value.slice(1, -1);
-					} else if (value[0] === '{') {
-						v.value = [
-							new RuntimeVariable('fBool', true),
-							new RuntimeVariable('fInteger', 123),
-							new RuntimeVariable('fString', 'hello'),
-							new RuntimeVariable('flazyInteger', 321)
-						];
-					} else {
-						v.value = parseFloat(value);
-					}
-
-					if (this.variables.has(name)) {
-						// the first write access to a variable is the "declaration" and not a "write access"
-						access = 'write';
-					}
-					this.variables.set(name, v);
+				if(value && !variable){
+					result = parseFloat(value);
 				} else {
-					if (this.variables.has(name)) {
-						// variable must exist in order to trigger a read access
-						access = 'read';
+					if( this.variables.has(variable)){
+						result = this.variables.get(variable)!.value;
 					}
 				}
-
+				if(isNegativ){
+					result = - result;
+				}
+				let v = new RuntimeVariable(name, result);
+				this.variables.set(name, v)
 				const accessType = this.breakAddresses.get(name);
 				if (access && accessType && accessType.indexOf(access) >= 0) {
 					this.sendEvent('stopOnDataBreakpoint', access);

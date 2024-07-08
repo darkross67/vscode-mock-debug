@@ -95,16 +95,13 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 		factory = new InlineDebugAdapterFactory();
 	}
 	context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('mock', factory));
-	if ('dispose' in factory) {
-		context.subscriptions.push(factory);
-	}
 
 	// override VS Code's default implementation of the debug hover
 	// here we match only Mock "variables", that are words starting with an '$'
-	context.subscriptions.push(vscode.languages.registerEvaluatableExpressionProvider('markdown', {
+	context.subscriptions.push(vscode.languages.registerEvaluatableExpressionProvider('num1060', {
 		provideEvaluatableExpression(document: vscode.TextDocument, position: vscode.Position): vscode.ProviderResult<vscode.EvaluatableExpression> {
 
-			const VARIABLE_REGEXP = /\$[a-z][a-z0-9]*/ig;
+			const VARIABLE_REGEXP = /([LE][0-9]*)/ig;
 			const line = document.lineAt(position.line).text;
 
 			let m: RegExpExecArray | null;
@@ -120,7 +117,7 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 	}));
 
 	// override VS Code's default implementation of the "inline values" feature"
-	context.subscriptions.push(vscode.languages.registerInlineValuesProvider('markdown', {
+	context.subscriptions.push(vscode.languages.registerInlineValuesProvider('num1060', {
 
 		provideInlineValues(document: vscode.TextDocument, viewport: vscode.Range, context: vscode.InlineValueContext) : vscode.ProviderResult<vscode.InlineValue[]> {
 
@@ -128,7 +125,7 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 
 			for (let l = viewport.start.line; l <= context.stoppedLocation.end.line; l++) {
 				const line = document.lineAt(l);
-				var regExp = /\$([a-z][a-z0-9]*)/ig;	// variables are words starting with '$'
+				var regExp = /([LE][0-9]*)/ig;	// variables are words starting with '$'
 				do {
 					var m = regExp.exec(line.text);
 					if (m) {
@@ -163,7 +160,7 @@ class MockConfigurationProvider implements vscode.DebugConfigurationProvider {
 		// if launch.json is missing or empty
 		if (!config.type && !config.request && !config.name) {
 			const editor = vscode.window.activeTextEditor;
-			if (editor && editor.document.languageId === 'markdown') {
+			if (editor && editor.document.languageId === 'num1060') {
 				config.type = 'mock';
 				config.name = 'Launch';
 				config.request = 'launch';
